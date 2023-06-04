@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Movie Mil Player</title>
+    <style>
+        body {
+          background-color:#000;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        #video-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div id="video-container">
+        <video id="video-id"></video>
+    </div>
+    <script src="https://cdn.fluidplayer.com/v3/current/fluidplayer.min.js"></script>
+    <script>
+        // Função para obter o ID do vídeo da URL
+        function getMovieIDFromURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const movieID = urlParams.get("vd");
+
+            return movieID;
+        }
+
+        // Função para obter a cor primária do objeto de vídeo
+        function getPrimaryColorFromVideo(video) {
+            if (video && video.color) {
+                return "#" + video.color;
+            }
+            return "#ffffff"; // Cor padrão
+        }
+
+        // Carregar o link JSON e reproduzir o vídeo
+        const jsonUrl = "https://script.google.com/macros/s/AKfycbx1HiW2FzmZ9SKf1OzOhZfA1I0jpTWTceT3x9DujrGSaGw7vfxDhxK8TYCN_d6bsQR5wg/exec";
+        fetch(jsonUrl)
+            .then(response => response.json())
+            .then(data => {
+                const movieID = getMovieIDFromURL();
+                const movies = data;
+                const movie = movies.find(movie => movie.id == movieID);
+                if (movie) {
+                    const mp4Url = movie.mp4Url + "#t=60"; // Define o tempo para capturar a imagem de 1 minuto
+                    const vastTag = movie.VAST || "https://www.videosprofitnetwork.com/watch.xml?key=b27c67c718142171c1d0f2bc5e1a9d0b"; // Obtém o link VAST do objeto de vídeo, com fallback para o link padrão
+                    const videoElement = document.getElementById("video-id");
+                    const primaryColor = getPrimaryColorFromVideo(movie); // Obtém a cor primária do objeto de vídeo
+                    videoElement.innerHTML = '<source src="' + mp4Url + '" type="video/mp4">';
+                    fluidPlayer("video-id", {
+                        layoutControls: {
+                            controlBar: {
+                                autoHideTimeout: 3,
+                                animated: true,
+                                autoHide: true,
+                            },
+                            htmlOnPauseBlock: {
+                                html: null,
+                                height: null,
+                                width: null,
+                            },
+                            autoPlay: false,
+                            mute: false,
+                            allowTheatre: false,
+                            playPauseAnimation: true,
+                            playbackRateEnabled: false,
+                            allowDownload: false,
+                            playButtonShowing: true,
+                            fillToContainer: true,
+                            posterImage: "",
+                            primaryColor: primaryColor, // Define a cor primária
+                        },
+                        vastOptions: {
+                            adList: [
+                                {
+                                    roll: "preRoll",
+                                    vastTag: vastTag, // Define o link VAST
+                                },
+                            ],
+                            adCTAText: false,
+                            adCTATextPosition: "",
+                        },
+                    });
+                } else {
+                    console.log("Filme não encontrado!");
+                }
+            })
+            .catch(error => {
+                console.log("Erro ao carregar JSON:", error);
+            });
+    </script>
+</body>
+</html>
